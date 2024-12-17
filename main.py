@@ -34,10 +34,18 @@ def generate_and_test(grammar, terminals, first, test_count, start, randomness_p
     return test_results
 
 
+def test_string(string, grammar, start):
+    is_valid = cyk(grammar, start, string)
+    if is_valid:
+        print(f"Строка '{string}' ПРИНАДЛЕЖИТ грамматике.")
+    else:
+        print(f"Строка '{string}' НЕ ПРИНАДЛЕЖИТ грамматике.")
+
+
 def my_print(g):
-    print("\n")
     for lhs, rules in g.items():
         print(f"{lhs} -> {' | '.join(' '.join(rule) for rule in rules)}")
+    print("\n")
 
 
 def get_brackets(s):
@@ -406,6 +414,8 @@ grammar = parse(lines)
 start = 'S'
 
 cnf_grammar = convert_to_cnf(grammar, start)
+print("Исходная грамматика в ХНФ:")
+my_print(cnf_grammar)
 
 first = build_first(cnf_grammar)
 follow = build_follow(cnf_grammar, first)
@@ -421,3 +431,6 @@ test_results = generate_and_test(cnf_grammar, terminals, first, test_count, star
 
 test_results_file = "test_results.txt"
 write_test_results(test_results_file, test_results)
+
+example_string = "a"
+test_string(example_string, cnf_grammar, start)
