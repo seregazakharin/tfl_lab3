@@ -1,3 +1,7 @@
-S -> SSa
-S -> SbSS
-S -> a
+S -> [sV8]a
+S -> SA
+A -> B   b [A]
+B -> [sV8]c
+[sV8] -> dd
+D -> a
+[A] -> c
