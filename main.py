@@ -5,14 +5,14 @@ import random
 
 
 def read_grammar_from_file(filename):
-    lines = []
+    strings = []
     try:
         with open(filename, 'r') as f:
-            lines = f.readlines()
-        lines = [line.strip() for line in lines if line.strip()]
+            strings = f.readlines()
+        strings = [i.strip() for i in strings if i.strip()]
     except FileNotFoundError:
         print(f"Файл {filename} не найден.")
-    return lines
+    return strings
 
 
 def write_test_results(filename, test_results):
@@ -54,11 +54,11 @@ def get_brackets(s):
     return matches
 
 
-def parse(lines):
+def parse(strings):
     rules = []
     nonTerms = defaultdict(list)
 
-    for rule in lines:
+    for rule in strings:
         # Разделяем правило на левую и правую части
         lhs, rhs = rule.strip().split('->')
         lhs = lhs.strip()
@@ -68,8 +68,8 @@ def parse(lines):
 
         # Для корректности определяем терминалы и нетерминалы
         processed_rhs = []
-        for symbol in rhs:
-            processed_rhs.append(symbol)
+        for symb in rhs:
+            processed_rhs.append(symb)
 
         rules.append((lhs, processed_rhs))
 
@@ -140,8 +140,8 @@ def remove_useless_symbols(grammar, start_symbol):
             if non_term in generating:
                 continue
             for rule in rules:
-                if all((symbol.islower() and symbol[0] != '[') for symbol in rule) or all(
-                        symbol in generating or (symbol.islower() and symbol[0] != '[') for symbol in rule):
+                if all((symb.islower() and symb[0] != '[') for symb in rule) or all(
+                        symb in generating or (symb.islower() and symb[0] != '[') for symb in rule):
                     generating.add(non_term)
                     changed = True
                     break
@@ -150,7 +150,7 @@ def remove_useless_symbols(grammar, start_symbol):
     grammar = {
         non_term: [
             rule for rule in rules
-            if all(symbol in generating or (symbol.islower() and symbol[0] != '[') for symbol in rule)
+            if all(symb in generating or (symb.islower() and symb[0] != '[') for symb in rule)
         ]
         for non_term, rules in grammar.items()
         if non_term in generating
@@ -163,16 +163,16 @@ def remove_useless_symbols(grammar, start_symbol):
     while queue:
         current = queue.popleft()
         for rule in grammar.get(current, []):
-            for symbol in rule:
-                if ((not symbol.islower()) or len(symbol) > 1) and symbol not in reachable:  # Если символ — нетерминал
-                    reachable.add(symbol)
-                    queue.append(symbol)
+            for symb in rule:
+                if ((not symb.islower()) or len(symb) > 1) and symb not in reachable:  # Если символ — нетерминал
+                    reachable.add(symb)
+                    queue.append(symb)
 
     # Удаляем правила с недостижимыми нетерминалами
     grammar = {
         non_term: [
             rule for rule in rules
-            if all(symbol in reachable or (symbol.islower() and symbol[0] != '[') for symbol in rule)
+            if all(symb in reachable or (symb.islower() and symb[0] != '[') for symb in rule)
         ]
         for non_term, rules in grammar.items()
         if non_term in reachable
@@ -190,16 +190,16 @@ def replace_terminals(grammar):
         for rule in rules:
             if len(rule) > 1:
                 new_rule = []
-                for symbol in rule:
-                    if symbol.islower() and symbol[0] != '[':
-                        if symbol not in terminal_map:
+                for symb in rule:
+                    if symb.islower() and symb[0] != '[':
+                        if symb not in terminal_map:
                             new_nonterminal = f"!_{counter}"
                             counter += 1
-                            terminal_map[symbol] = new_nonterminal
-                            new_grammar[new_nonterminal].append([symbol])
-                        new_rule.append(terminal_map[symbol])
+                            terminal_map[symb] = new_nonterminal
+                            new_grammar[new_nonterminal].append([symb])
+                        new_rule.append(terminal_map[symb])
                     else:
-                        new_rule.append(symbol)
+                        new_rule.append(symb)
                 new_grammar[lhs].append(new_rule)
             else:
                 new_grammar[lhs].append(rule)
@@ -207,7 +207,7 @@ def replace_terminals(grammar):
     return new_grammar
 
 
-def convert_to_cnf(grammar, start):
+def grammar_to_cnf(grammar, start):
     grammar = remove_long_rules(grammar)
     grammar = remove_chain_rules(grammar)
     grammar = remove_useless_symbols(grammar, start)
@@ -221,9 +221,9 @@ def build_first(grammar):
     # Инициализация FIRST для терминалов
     for lhs, rules in grammar.items():
         for rule in rules:
-            for symbol in rule:
-                if symbol.islower() and symbol[0] != '[':  # Терминал
-                    first[lhs].add(symbol)
+            for symb in rule:
+                if symb.islower() and symb[0] != '[':  # Терминал
+                    first[lhs].add(symb)
                     break
 
     # Повторяем до тех пор, пока FIRST не перестанет изменяться
@@ -232,9 +232,9 @@ def build_first(grammar):
         changed = False
         for lhs, rules in grammar.items():
             for rule in rules:
-                for symbol in rule:
-                    if ((not symbol.islower()) or len(symbol) > 1):  # Нетерминал
-                        new_first = first[symbol] - first[lhs]
+                for symb in rule:
+                    if ((not symb.islower()) or len(symb) > 1):  # Нетерминал
+                        new_first = first[symb] - first[lhs]
                         if new_first:
                             first[lhs].update(new_first)
                             changed = True
@@ -295,9 +295,9 @@ def extract_terminals(grammar):
     terminals = set()
     for non_terminal, productions in grammar.items():
         for production in productions:
-            for symbol in production:
-                if symbol.islower() and symbol[0] != '[':
-                    terminals.add(symbol)
+            for symb in production:
+                if symb.islower() and symb[0] != '[':
+                    terminals.add(symb)
     return terminals
 
 
@@ -307,9 +307,9 @@ def extract_non_terminals(grammar):
     for nT, rules in grammar.items():
         nTs.add(nT)
         for rule in rules:
-            for symbol in rule:
-                if (not symbol.islower()) or len(symbol) > 1 or len(symbol) > 1:
-                    nTs.add(symbol)
+            for symb in rule:
+                if (not symb.islower()) or len(symb) > 1 or len(symb) > 1:
+                    nTs.add(symb)
 
     return nTs
 
@@ -408,12 +408,12 @@ def cyk(grammar, start_symbol, string):
 
 
 grammar_file = "grammar.txt"
-lines = read_grammar_from_file(grammar_file)
+strings = read_grammar_from_file(grammar_file)
 
-grammar = parse(lines)
+grammar = parse(strings)
 start = 'S'
 
-cnf_grammar = convert_to_cnf(grammar, start)
+cnf_grammar = grammar_to_cnf(grammar, start)
 print("Исходная грамматика в ХНФ:")
 my_print(cnf_grammar)
 
